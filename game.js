@@ -142,25 +142,22 @@ function moveBoots() {
 		boot.y += (score == 0) ? 1 : Math.ceil(score / 10)
 		if (boot.y > stage.height) {boots.splice(bindex, 1)};
 		//collision detecion
-		snek.forEach(function(point, sindex, array) {
+		if ((head.x > boot.x) && (head.x < (boot.x + 34))) {
+			if ((head.y > boot.y) && (head.y < (boot.y + 85))) {
+				score ++;
+				boots.splice(bindex, 1);
+			}
+		} else if ((head.x > boot.x) && (head.x < (boot.x + 85))) {
+			if ((head.y > (boot.y + 67)) && (head.y < (boot.y + 85))) {
+				score++;
+				boots.splice(bindex, 1);
+			}
+		};
+		snek.slice(0,(snek.length - 1)).forEach(function(point, sindex, array) {
 			if ((point.x > boot.x) && (point.x < (boot.x + 34))) {
-				if ((point.y > boot.y) && (point.y < (boot.y + 85))) {
-					if (sindex == (snek.length - 1)) {
-						score++;
-						boots.splice(bindex, 1);
-					} else {
-						isGameOver = true;
-					}
-				}
+				if ((point.y > boot.y) && (point.y < (boot.y + 85))) {isGameOver = true}
 			} else if ((point.x > boot.x) && (point.x < (boot.x + 85))) {
-				if ((point.y > (boot.y + 67)) && (point.y < (boot.y + 85))) {
-					if (sindex == (snek.length - 1)) {
-						score++;
-						boots.splice(bindex, 1);
-					} else {
-						isGameOver = true;
-					}
-				}
+				if ((point.y > (boot.y + 67)) && (point.y < (boot.y + 85))) {isGameOver = true}
 			}
 		})
 	})
