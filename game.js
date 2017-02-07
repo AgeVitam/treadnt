@@ -25,18 +25,18 @@ reset();
 //functions
 
 function reset(){
-  gamePaused     	= false,
-  movingCCW	  	  = false,
-  textFade	    	= 300,
-  snek			    	= [],
-  radius		    	= 30,
-  score			    	=	0,
-  angle			  	  = 0,
-  incr			  	  = Math.PI / 16, 	//angle of arc segment to move head each frame
-  length		  	  =	30,							//max number of segments for snek
-  boots			  	  = [],
-  maxBoots	  	  =	100,
-  center = { 										//center of orbit
+  gamePaused      = false,
+  movingCCW       = false,
+  textFade        = 300,
+  snek            = [],
+  radius          = 30,
+  score           =	0,
+  angle           = 0,
+  incr            = Math.PI / 16,	//angle of arc segment to move head each frame
+  length          =	30,
+  boots           = [],
+  maxBoots        =	100,
+  center = {
     'x': (stage.width / 2),
     'y': (stage.height / 2)
   };
@@ -55,11 +55,11 @@ function getRandomInt(min, max) { //inclusive min, exclusive max
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function magnitude(vec) { 				//vec should have x & y
+function magnitude(vec) {
   return Math.sqrt((vec.x * vec.x) + (vec.y * vec.y));
 }
 
-function distance(vec1,vec2) { 		//vecs should have x & y
+function distance(vec1,vec2) {
   var vecr = {
     "x": (vec1.x - vec2.x),
     "y": (vec1.y - vec2.y)
@@ -163,8 +163,12 @@ function mouseDownHandler(event) {
 
 function mouseUpHandler(event) {
   if (isMouseClicked == true) {
-    isMouseClicked = false;
-    turnAround();
+    if (isGameOver == true) {
+      reset();
+    } else {
+      isMouseClicked = false;
+      turnAround();
+    }
   }
 }
     
@@ -182,6 +186,8 @@ document.addEventListener("keydown", keyDownHandler);
 document.addEventListener("keyup", keyUpHandler);
 document.addEventListener("mousedown", mouseDownHandler);
 document.addEventListener("mouseup", mouseUpHandler);
+document.addEventListener("touchstart", mouseDownHandler);
+document.addEventListener("touchend", mouseUpHandler);
 
 //game loop
 
@@ -214,18 +220,19 @@ function update() {
       //boots fall from the sky!
       bootSpawn();
       moveBoots();
+      
       //fade out the title text
       if (textFade > 0) {
         ctx.fillStyle = "rgba(0,0,0," + (textFade / 300) + ")";
         ctx.fillText("Treadn't", ((stage.width - 180) / 2), ((stage.height / 2) + 100));
         textFade--
       }
+      
       //draw snek
       ctx.fillStyle = "#000";
       ctx.lineWidth = 5;
       snek.forEach(function(point, index, array) {
         ctx.beginPath();
-        //ctx.arc(point.center.x, point.center.y, radius, point.angle, (point.angle * point.sign + incr));
         ctx.arc(point.x,point.y, 6, 0, Math.PI * 2);
         ctx.fill();
       });
