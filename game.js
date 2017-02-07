@@ -18,34 +18,35 @@ stage.width = 640;
 stage.height = 480;
 var ctx = stage.getContext("2d");
 ctx.font = "bold 40px sans-serif";
-var gamePaused, movingCCW, textFade, snek, radius, score, sign,
+var gamePaused, movingCCW, textFade, snek, radius, score, sign, isMouseClicked,
     angle, incr, length, center, head, isGameOver, isKeyPressed, boots, maxBoots;
 reset();
 
 //functions
 
 function reset(){
-    gamePaused 	= false,
-    movingCCW		= false,
-    textFade		= 300,
-    snek				= [],
-    radius			= 30,
-    score				=	0,
-    angle				= 0,
-    incr				= Math.PI / 16, 	//angle of arc segment to move head each frame
-    length			=	30,							//max number of segments for snek
-    boots				= [],
-    maxBoots		=	100,
-    center = { 										//center of orbit
-      'x': (stage.width / 2),
-      'y': (stage.height / 2)
-    };
-    head = { 
-      'x': (center.x + radius),
-      'y': (stage.height / 2)
-    };
-    isGameOver		= false;
-    isKeyPressed	= false;
+  gamePaused     	= false,
+  movingCCW	  	  = false,
+  textFade	    	= 300,
+  snek			    	= [],
+  radius		    	= 30,
+  score			    	=	0,
+  angle			  	  = 0,
+  incr			  	  = Math.PI / 16, 	//angle of arc segment to move head each frame
+  length		  	  =	30,							//max number of segments for snek
+  boots			  	  = [],
+  maxBoots	  	  =	100,
+  center = { 										//center of orbit
+    'x': (stage.width / 2),
+    'y': (stage.height / 2)
+  };
+  head = { 
+    'x': (center.x + radius),
+    'y': (stage.height / 2)
+  };
+  isGameOver      = false;
+  isKeyPressed  	= false;
+  isMouseClicked  = false;
 }
 
 function getRandomInt(min, max) { //inclusive min, exclusive max
@@ -120,7 +121,14 @@ function moveBoots() {
   })
 }
 
-//key handling
+//event handling
+
+function turnAround() {
+  movingCCW = movingCCW ? false : true;
+  center.x = ((2 * head.x) - center.x);
+  center.y = ((2 * head.y) - center.y);
+  angle = Math.PI - angle;
+}
 
 function keyDownHandler(event) {
   if (isKeyPressed == false) {
@@ -128,13 +136,8 @@ function keyDownHandler(event) {
     var keyName = event.key;
     if (isGameOver == false) {
       if (keyName == "Escape") {
-        (gamePaused == false) ? gamePaused = true : gamePaused = false;
-      } else {
-        movingCCW = true;
-        center.x = ((2 * head.x) - center.x);
-        center.y = ((2 * head.y) - center.y);
-        angle = Math.PI - angle;
-      }
+        gamePaused = gamePaused ? false : true;
+      } else {turnAround()}
     } else {
       if (keyName == "Escape") {
         reset();
@@ -145,16 +148,26 @@ function keyDownHandler(event) {
 
 function keyUpHandler(event) {
   if (isKeyPressed == true) {
+    isKeyPressed = false;
     var keyName = event.key;
-    isKeyPressed = false
-    if ((keyName != "Escape") && (isGameOver == false)) {
-      movingCCW = false;
-      center.x = ((2 * head.x) - center.x);
-      center.y = ((2 * head.y) - center.y);
-      angle = Math.PI - angle;
-    }
+    if ((keyName != "Escape") && (isGameOver == false)) {turnAround()}
   }
 }
+
+function mouseDownHandler(event) {
+  if (isMouseClicked == false) {
+    isMouseClicked = true;
+    turnAround();
+  }
+}
+
+function mouseUpHandler(event) {
+  if (isMouseClicked == true) {
+    isMouseClicked = false;
+    turnAround();
+  }
+}
+    
 
 //loading screen
 
@@ -167,6 +180,8 @@ bootImg.src = "img/boot.png";
 gameloop = setInterval(update, 33);
 document.addEventListener("keydown", keyDownHandler);
 document.addEventListener("keyup", keyUpHandler);
+document.addEventListener("mousedown", mouseDownHandler);
+document.addEventListener("mouseup", mouseUpHandler);
 
 //game loop
 
