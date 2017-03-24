@@ -19,7 +19,8 @@ stage.height = 480;
 var ctx = stage.getContext("2d");
 ctx.font = "bold 40px sans-serif";
 var gamePaused, movingCCW, textFade, snek, radius, score, sign, isMouseClicked,
-    angle, incr, length, center, head, isGameOver, isKeyPressed, boots, maxBoots;
+    angle, incr, length, center, head, isGameOver, isKeyPressed, boots, maxBoots,
+    fireworks;
 reset();
 
 //functions
@@ -47,6 +48,7 @@ function reset(){
   isGameOver      = false;
   isKeyPressed  	= false;
   isMouseClicked  = false;
+  fireworks       = [];
 }
 
 function getRandomInt(min, max) { //inclusive min, exclusive max
@@ -83,6 +85,47 @@ function gameOver() {
   ctx.font = "bold 40px sans-serif";
 }
 
+function explode(newx,newy,color,speed) {
+  var strc
+  if (color == 'red') {
+    strc = 'rgba(255,0,0,'
+  } else if (color == 'white') {
+    strc = 'rgba(255,255,255,'
+  } else { // blue
+    strc = 'rgba(0,0,255,'
+  }
+  fireworks.push( 
+    {
+      'x': newx,
+      'y': newy,
+      'radius': 1,
+      'color': strc,
+      'alpha': 90,
+      'speed': speed
+    })
+}
+
+function drawFireworks() {
+  fireworks.forEach (function(firework, index, array){
+    var theta
+    for(theta = 0; theta < (Math.PI *2); theta += (Math.PI / 32)) {
+      ctx.beginPath();
+      cos = Math.cos(theta);
+      sin = Math.sin(theta);
+      fx = firework.x + (firework.radius * cos);
+      fy = firework.y + (firework.radius * sin);
+      ctx.moveTo(fx,fy);
+      fx = firework.x + ((firework.radius + 5) * cos);
+      fy = firework.y + ((firework.radius + 5) * sin);
+      ctx.lineTo(fx,fy);
+      ctx.strokeStyle = firework.color + (firework.alpha / 90) + ')';
+      ctx.stroke();
+    }
+    firework.radius += firework.speed
+    firework.alpha--
+  })
+}
+
 function bootSpawn() {
   if (boots.length < maxBoots) {
     if (getRandomInt(0,100) > 98) {
@@ -104,11 +147,17 @@ function moveBoots() {
       if ((head.y > boot.y) && (head.y < (boot.y + 85))) {
         score ++;
         boots.splice(bindex, 1);
+        explode(head.x, head.y, 'red', 3);
+        explode(head.x, head.y, 'white', 2);
+        explode(head.x, head.y, 'blue', 1);
       }
     } else if ((head.x > boot.x) && (head.x < (boot.x + 85))) {
       if ((head.y > (boot.y + 67)) && (head.y < (boot.y + 85))) {
         score++;
         boots.splice(bindex, 1);
+        explode(head.x, head.y, 'red', 1);
+        explode(head.x, head.y, 'white', 2);
+        explode(head.x, head.y, 'blue', 3);
       }
     };
     snek.slice(0,(snek.length - 1)).forEach(function(point, sindex, array) {
@@ -202,6 +251,9 @@ function update() {
       ctx.fillText("Press ESC to resume", ((stage.width - 240) / 2), ((stage.height / 2) + 20));
       ctx.font = "bold 40px sans-serif";
     } else {
+      //move fireworks
+      drawFireworks();
+      
       //move head around center
       sign = (movingCCW == true) ? (-1) : 1;
       snek.push({"x": head.x, "y": head.y});
