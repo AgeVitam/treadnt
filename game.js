@@ -121,8 +121,9 @@ function drawFireworks() {
       ctx.strokeStyle = firework.color + (firework.alpha / 90) + ')';
       ctx.stroke();
     }
-    firework.radius += firework.speed
-    firework.alpha--
+    firework.radius += firework.speed;
+    firework.alpha--;
+		if (firework.alpha <= 0) {fireworks.splice(index,1)}
   })
 }
 
@@ -282,7 +283,6 @@ function update() {
       
       //draw snek
       ctx.fillStyle = "#000";
-      ctx.lineWidth = 5;
       snek.forEach(function(point, index, array) {
         ctx.beginPath();
         ctx.arc(point.x,point.y, 6, 0, Math.PI * 2);
