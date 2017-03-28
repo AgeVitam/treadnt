@@ -139,38 +139,81 @@ function bootSpawn() {
   }
 }
 
+function collisionDetect(object, xstart, ystart, xend, yend) {
+	if ((object.x > xstart) && (object.x < xend)) {
+		if ((object.y > ystart) && (object.y < yend)) { return true }
+	}
+	return false
+}
+
+function eatBoot(index) {
+	score++;
+	boots.splice(index, 1);
+	explode(head.x, head.y, 'red', 3);
+	explode(head.x, head.y, 'white', 2);
+	explode(head.x, head.y, 'blue', 1);
+}
+
+function die() {
+	isGameOver = true
+}
+
 function moveBoots() {
   boots.forEach(function(boot, bindex, array) {
-    boot.y += (score == 0) ? 1 : Math.ceil(score / 10)
+    boot.y += (score == 0) ? 1 : Math.ceil(score / 10);
     if (boot.y > stage.height) {boots.splice(bindex, 1)};
     //collision detecion
-    if ((head.x > boot.x) && (head.x < (boot.x + 34))) {
-      if ((head.y > boot.y) && (head.y < (boot.y + 85))) {
-        score ++;
-        boots.splice(bindex, 1);
-        explode(head.x, head.y, 'red', 3);
-        explode(head.x, head.y, 'white', 2);
-        explode(head.x, head.y, 'blue', 1);
-      }
-    } else if ((head.x > boot.x) && (head.x < (boot.x + 85))) {
-      if ((head.y > (boot.y + 67)) && (head.y < (boot.y + 85))) {
-        score++;
-        boots.splice(bindex, 1);
-        explode(head.x, head.y, 'red', 1);
-        explode(head.x, head.y, 'white', 2);
-        explode(head.x, head.y, 'blue', 3);
-      }
-    };
-    snek.slice(0,(snek.length - 1)).forEach(function(point, sindex, array) {
-      if ((point.x > boot.x) && (point.x < (boot.x + 34))) {
-        if ((point.y > boot.y) && (point.y < (boot.y + 85))) {isGameOver = true}
-      } else if ((point.x > boot.x) && (point.x < (boot.x + 85))) {
-        if ((point.y > (boot.y + 67)) && (point.y < (boot.y + 85))) {isGameOver = true}
-      }
-    })
+		var hit1 = collisionDetect(head,boot.x,boot.y,boot.x + 34, boot.y + 85);
+		var hit2 = collisionDetect(head,boot.x,boot.y + 67, boot.x + 85, boot.y + 85);
+		if ((hit1 == true) || (hit2 == true)) {eatBoot(bindex)};
+		snek.slice(0,(snek.length - 1)).forEach(function(point,sindex,array) {
+			var hit3 = collisionDetect(point, boot.x, boot.y, boot.x + 34, boot.y + 85);
+			var hit4 = collisionDetect(point, boot.x, boot.y + 67, boot.x + 85, boot.y +85);
+			if ((hit3 == true) || (hit4 == true)) {die()}
+		})
   })
 }
 
+function showPause() {
+	ctx.fillStyle = "#000";
+	ctx.fillText("PAUSED", ((stage.width - 170) / 2), (stage.height / 2));
+	ctx.font = "bold 20px sans-serif";
+	ctx.fillText("Press ESC to resume", ((stage.width - 240) / 2), ((stage.height / 2) + 20));
+	ctx.font = "bold 40px sans-serif";
+}
+
+function moveHead() {
+	sign = (movingCCW == true) ? (-1) : 1;
+	snek.push({"x": head.x, "y": head.y});
+	if (snek.length > length) {snek.shift()};
+	angle += incr;
+	if (angle >= 2 * Math.PI) {angle -= 2 * Math.PI};
+	head.x = center.x + ((radius * Math.cos(angle * sign)));
+	head.y = center.y + ((radius * Math.sin(angle * sign)));
+	var hit = collisionDetect(head, 0, 0, stage.width, stage.height);
+	if (hit == false) {die()}
+}
+
+function drawSnek() {
+	ctx.fillStyle = "#000";
+	snek.forEach(function(point, index, array) {
+		ctx.beginPath();
+		ctx.arc(point.x,point.y, 6, 0, Math.PI * 2);
+		ctx.fill();
+	});
+}
+
+function fadeText() {
+	ctx.fillStyle = "rgba(0,0,0," + (textFade / 300) + ")";
+	ctx.fillText("Treadn't", ((stage.width - 180) / 2), ((stage.height / 2) + 100));
+	textFade--
+}
+
+function drawBoots() {
+	boots.forEach(function(boot, index, array) {
+		ctx.drawImage(bootImg, boot.x, boot.y);
+	})
+}
 //event handling
 
 function turnAround() {
@@ -244,81 +287,18 @@ document.addEventListener("touchend", mouseUpHandler);
 function update() {
   clearScreen();
   if (isGameOver == false) {
-    //handle pausing
     if (gamePaused == true) {
-      ctx.fillStyle = "#000";
-      ctx.fillText("PAUSED", ((stage.width - 170) / 2), (stage.height / 2));
-      ctx.font = "bold 20px sans-serif";
-      ctx.fillText("Press ESC to resume", ((stage.width - 240) / 2), ((stage.height / 2) + 20));
-      ctx.font = "bold 40px sans-serif";
+      showPause()
     } else {
-      //move fireworks
       drawFireworks();
-      
-      //move head around center
-      sign = (movingCCW == true) ? (-1) : 1;
-      snek.push({"x": head.x, "y": head.y});
-      if (snek.length > length) {snek.shift()};
-      angle += incr;
-      if (angle >= 2 * Math.PI) {angle -= 2 * Math.PI};
-      head.x = center.x + ((radius * Math.cos(angle * sign)));
-      head.y = center.y + ((radius * Math.sin(angle * sign)));
-      
-      //collision detection
-      if (((head.x >  stage.width) || (head.x < 0)) 
-      ||  ((head.y > stage.height) || (head.y < 0))) {
-          isGameOver = true;
-      };
-      
-      //boots fall from the sky!
+      moveHead();
       bootSpawn();
       moveBoots();
-      
-      //fade out the title text
-      if (textFade > 0) {
-        ctx.fillStyle = "rgba(0,0,0," + (textFade / 300) + ")";
-        ctx.fillText("Treadn't", ((stage.width - 180) / 2), ((stage.height / 2) + 100));
-        textFade--
-      }
-      
-      //draw snek
-      ctx.fillStyle = "#000";
-      snek.forEach(function(point, index, array) {
-        ctx.beginPath();
-        ctx.arc(point.x,point.y, 6, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      
-      //draw boots
-      boots.forEach(function(boot, index, array) {
-        ctx.drawImage(bootImg, boot.x, boot.y);
-      })
-    
+      if (textFade > 0) { fadeText() };
+      drawSnek();
+			drawBoots()
     };
-    
-    /*
-    //UNCOMMENT FOR TROUBLESHOOTING
-    
-    //show center and head positions as white and green circles
-    ctx.fillStyle = "#FFF";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(center.x,center.y, 4, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = "#008000";
-    ctx.beginPath();
-    ctx.arc(head.x,head.y, 4, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.stroke();
-      
-    //show angle values
-    ctx.fillStyle = "#000";
-    ctx.fillText("angle: " + (angle / Math.PI).toFixed(3) + "pi", 5, 45);
-    */
-
   } else {gameOver()};
-  
   //score
   ctx.fillStyle = "rgba(0,0,0,.85)";
   ctx.fillText("Score: " + score, 5, stage.height - 5);
